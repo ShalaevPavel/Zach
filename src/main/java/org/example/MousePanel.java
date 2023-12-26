@@ -11,22 +11,37 @@ import java.util.concurrent.Executors;
 import java.util.regex.*;
 
 public class MousePanel extends JPanel {
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private SimpleDateFormat dateFormat;
+    private JLabel dateLabel;
     private JTextArea textArea;
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
     private File file = new File("mouse_events.txt");
+    private ResourceBundle messages;
+    private Locale currentLocale;
 
     public MousePanel() {
+        currentLocale = Locale.getDefault();
+        messages = ResourceBundle.getBundle("messages", currentLocale);
+        dateFormat = new SimpleDateFormat(messages.getString("dateFormat"));
+
         setPreferredSize(new Dimension(500, 500));
         textArea = new JTextArea(20, 50);
         JScrollPane scrollPane = new JScrollPane(textArea);
         this.add(scrollPane);
+
+        dateLabel = new JLabel(dateFormat.format(new Date()));
+        this.add(dateLabel);
+
+        JButton changeLangButton = new JButton(messages.getString("changeLang"));
+        changeLangButton.addActionListener(e -> changeLanguage());
+        this.add(changeLangButton);
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 String buttonText = e.getButton() == MouseEvent.BUTTON1 ? "L" : "R";
                 String time = dateFormat.format(new Date());
-                String message = buttonText + " " + e.getX() + " , " + e.getY() + " " + time + "\n";
+                String message = buttonText + " " + e.getX() + "," + e.getY() + " " + time + "\n";
 
                 Graphics g = getGraphics();
                 g.drawRect(e.getX(), e.getY(), 10, 10);
@@ -44,6 +59,14 @@ public class MousePanel extends JPanel {
         });
     }
 
+    private void changeLanguage() {
+        currentLocale = currentLocale.equals(Locale.ENGLISH) ? Locale.FRENCH : Locale.ENGLISH;
+        messages = ResourceBundle.getBundle("messages", currentLocale);
+        dateFormat = new SimpleDateFormat(messages.getString("dateFormat"));
+        dateLabel.setText(dateFormat.format(new Date()));
+        ((JButton) getComponent(2)).setText(messages.getString("changeLang"));
+    }
+
     private void updateTextArea() {
         try {
             String content = new String(Files.readAllBytes(file.toPath()));
@@ -55,22 +78,13 @@ public class MousePanel extends JPanel {
     }
 
     private void countFloatingPoints(String content) {
-        Pattern pattern = Pattern.compile("\\b\\d+\\.\\d+\\b");
+        Pattern pattern = Pattern.compile("\\b\\d+\\,\\d+\\b");
         Matcher matcher = pattern.matcher(content);
         int count = 0;
         while (matcher.find()) {
             count++;
         }
         System.out.println("Floating-point numbers count: " + count);
-    }
-
-    private String getFormattedDate() {
-        Locale ruLocale = new Locale("ru", "RU");
-        Locale byLocale = new Locale("be", "BY");
-        DateFormat ruDateFormat = DateFormat.getDateInstance(DateFormat.LONG, ruLocale);
-        DateFormat byDateFormat = DateFormat.getDateInstance(DateFormat.LONG, byLocale);
-        Date currentDate = new Date();
-        return "RU: " + ruDateFormat.format(currentDate) + "\nBY: " + byDateFormat.format(currentDate);
     }
 
     public static void main(String[] args) {
@@ -81,7 +95,6 @@ public class MousePanel extends JPanel {
             frame.getContentPane().add(mousePanel);
             frame.pack();
             frame.setVisible(true);
-            JOptionPane.showMessageDialog(frame, mousePanel.getFormattedDate());
         });
     }
 }

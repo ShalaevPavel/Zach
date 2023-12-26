@@ -1,5 +1,4 @@
 package org.example;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -15,6 +14,7 @@ public class MousePanel extends JPanel {
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private JTextArea textArea;
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private File file = new File("mouse_events.txt");
 
     public MousePanel() {
         setPreferredSize(new Dimension(500, 500));
@@ -33,35 +33,37 @@ public class MousePanel extends JPanel {
                 g.drawRect(e.getX(), e.getY(), 10, 10);
                 g.drawString(buttonText, e.getX(), e.getY());
 
-                // Listener 2: Appending the message to a text file.
+                // Listener 2: Appending the message to a text file and updating text area.
                 executorService.submit(() -> {
-                    try (BufferedWriter writer = new BufferedWriter(new FileWriter("mouse_events.txt", true))) {
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
                         writer.write(message);
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
+                    updateTextArea();
                 });
             }
         });
-
-        // Display the text file content and count floating-point numbers
-        executorService.submit(this::displayFileContent);
     }
 
-    private void displayFileContent() {
+    private void updateTextArea() {
         try {
-            String content = new String(Files.readAllBytes(Paths.get("mouse_events.txt")));
+            String content = new String(Files.readAllBytes(file.toPath()));
             SwingUtilities.invokeLater(() -> textArea.setText(content));
-            Pattern pattern = Pattern.compile("\\b\\d+\\.\\d+\\b");
-            Matcher matcher = pattern.matcher(content);
-            int count = 0;
-            while (matcher.find()) {
-                count++;
-            }
-            System.out.println("Floating-point numbers count: " + count);
+            countFloatingPoints(content);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void countFloatingPoints(String content) {
+        Pattern pattern = Pattern.compile("\\b\\d+\\.\\d+\\b");
+        Matcher matcher = pattern.matcher(content);
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+        }
+        System.out.println("Floating-point numbers count: " + count);
     }
 
     private String getFormattedDate() {
@@ -77,10 +79,11 @@ public class MousePanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Mouse Panel");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.getContentPane().add(new MousePanel());
+            MousePanel mousePanel = new MousePanel();
+            frame.getContentPane().add(mousePanel);
             frame.pack();
             frame.setVisible(true);
-            JOptionPane.showMessageDialog(frame, new MousePanel().getFormattedDate());
+            JOptionPane.showMessageDialog(frame, mousePanel.getFormattedDate());
         });
     }
 }

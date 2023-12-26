@@ -26,14 +26,12 @@ public class MousePanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 String buttonText = e.getButton() == MouseEvent.BUTTON1 ? "L" : "R";
                 String time = dateFormat.format(new Date());
-                String message = buttonText + " " + e.getX() + "," + e.getY() + " " + time + "\n";
+                String message = buttonText + " " + e.getX() + " , " + e.getY() + " " + time + "\n";
 
-                // Listener 1: Drawing the square with the text L or R.
                 Graphics g = getGraphics();
                 g.drawRect(e.getX(), e.getY(), 10, 10);
                 g.drawString(buttonText, e.getX(), e.getY());
 
-                // Listener 2: Appending the message to a text file and updating text area.
                 executorService.submit(() -> {
                     try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
                         writer.write(message);

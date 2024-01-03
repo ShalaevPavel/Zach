@@ -14,6 +14,8 @@ public class MousePanel extends JPanel {
     private SimpleDateFormat dateFormat;
     private JLabel dateLabel;
     private JTextArea textArea;
+
+    private JTextArea monthTextArea;
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
     private File file = new File("mouse_events.txt");
     private ResourceBundle messages;
@@ -23,13 +25,18 @@ public class MousePanel extends JPanel {
         currentLocale = Locale.getDefault();
         messages = ResourceBundle.getBundle("messages", currentLocale);
         dateFormat = new SimpleDateFormat(messages.getString("dateFormat"));
+        System.out.println(getCurrentMonth());
+
+//        String month = messages.getString(getCurrentMonth()) ;
+//        System.out.println(month);
+
 
         setPreferredSize(new Dimension(500, 500));
         textArea = new JTextArea(20, 50);
         JScrollPane scrollPane = new JScrollPane(textArea);
         this.add(scrollPane);
 
-        dateLabel = new JLabel(dateFormat.format(new Date()));
+        dateLabel = new JLabel(messages.getString(getCurrentMonth()) + " " + dateFormat.format(new Date()));
         this.add(dateLabel);
 
         JButton changeLangButton = new JButton(messages.getString("changeLang"));
@@ -63,7 +70,7 @@ public class MousePanel extends JPanel {
         currentLocale = currentLocale.equals(Locale.ENGLISH) ? Locale.FRENCH : Locale.ENGLISH;
         messages = ResourceBundle.getBundle("messages", currentLocale);
         dateFormat = new SimpleDateFormat(messages.getString("dateFormat"));
-        dateLabel.setText(dateFormat.format(new Date()));
+        dateLabel.setText(messages.getString(getCurrentMonth())+ " " + dateFormat.format(new Date()));
         ((JButton) getComponent(2)).setText(messages.getString("changeLang"));
     }
 
@@ -85,6 +92,11 @@ public class MousePanel extends JPanel {
             count++;
         }
         System.out.println("Floating-point numbers count: " + count);
+    }
+
+    private String getCurrentMonth() {
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM", Locale.ENGLISH);
+        return monthFormat.format(new Date());
     }
 
     public static void main(String[] args) {
